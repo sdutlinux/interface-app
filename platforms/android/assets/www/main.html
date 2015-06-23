@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<!--自适应界面,如果出现,在某些设备出现界面偏小的话,检查一下有没有加入这句 -->
+	<meta http-equiv="Content-type" name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width">
+	<script src="./cordova.js"></script>
+
+	<link rel="stylesheet" href="./css/jquery.mobile-1.0.1.min.css" />
+
+	<script src="./js/jquery.js"></script>
+	<script src="./js/jquery.mobile-1.0.1.min.js"></script>
+
+	<script type="text/javascript">
+	$("document").ready(function(){
+		var address = "http://210.44.176.208:80"  //url ip address
+		
+		function Local() {
+			var content_;
+			var exam_;
+			var question_;
+			var back_;
+			var pk;
+		}
+		var local = new Local();
+		//获取题列表
+		$("#subjectcon").on("click", "li", function() {
+			var subjectname = $(this).val();
+			$.get(address + "/paper/phone/subject/" + subjectname + "/", {},function(data) {
+					local.exam_ = data;
+	              	var exam_ = data;
+	              	if (exam_.status == "ok"){
+	              		$("#errorsubject").hide();
+		              	$(data.info).each(function(index){
+		              		var cont = exam_.info[index].name;
+		              		var pk = exam_.info[index].pk;
+		              		local.pk = exam_.info[index].pk;
+			              	$("#examcon").append("<li id=\""
+			              			+ pk +
+			              		"\"><a href=\"#questions\" data-transition=\"slide\">"
+									+ cont +
+								"</a></li>")
+			              	.listview('refresh').trigger("create");  //重载css
+			            })
+	              	}
+		            else if (exam_.status == "server_error"){
+		            	var tip = "获取服务器信息失败请重试";
+		            	$("#errorsubject").text(tip);
+		            	$("#errorsubject").show();
+		            }
+		            else if (exam_.status == "local_error"){
+		            	var tip = "本地信息错误请重试";
+		            	$("#errorsubject").text(tip);
+		            	$("#errorsubject").show();
+		            }
+		            else {
+		            	var tip = "未知错误请重试";
+		            	$("#errorsubject").text(tip);
+		            	$("#errorsubject").show();
+		            }
+			})
+    	})
+		//获取内容
+		$("#examcon").on("click", "li", function() {
+			var examname = $(this).attr("id");
+			$.get(address + "/paper/phone/" + examname + "/", {}, function(data) {
+					local.question_ = data;
+	              	var question_ = data;
+	              	if (question_.status == "ok"){
+	              		$("#clean").append("<input type=\"hidden\" name=\"pk\"  value=\""
+					              		+ examname +	
+					              		"\">")
+		              	$(data.info).each(function(index){
+		              		var cont = question_.info[index];
+		              		var cont_question = cont.description;
+		              		
+			              	$("#clean").append("<div data-role=\"fieldcontain\"><fieldset data-role=\"\"><legend>"
+				              	+ cont_question +
+				              "</legend><p></p>")
+		              		if (cont.type == "single"){
+			              		var cont_name= cont.num;
+			              		$(cont.choice).each(function(index){
+			              		var choice =cont.choice[index];
+			              		var cont_text= choice.choice_text;
+			              		var cont_value= choice.sign;
+					              	$("#clean").append("<label for=\""
+					              		+ cont_value + cont_name +
+					              		"\">"
+					              		+ cont_text +
+					              		"</label><input type=\"radio\" name=\""
+					              		+ cont_name +	
+					              		"\"  value=\""
+					              		+ cont_value +	
+					              		"\" id=\""
+					              		+ cont_value + cont_name +	
+					              		"\">").trigger("create");
+									
+								})
+			              		
+		       			    } 
+		       			    else if (cont.type == "multiple"){
+			              		var cont_name= cont.num;
+			              		$(cont.choice).each(function(index){
+			              		var choice =cont.choice[index];
+			              		var cont_text= choice.choice_text;
+			              		var cont_value= choice.sign;
+					              	$("#clean").append("<label for=\""
+					              		+ cont_value + cont_name +	
+					              		"\">"
+					              		+ cont_text +
+					              		"</label><input type=\"checkbox\" name=\""
+					              		+ cont_name +	
+					              		"\"  value=\""
+					              		+ cont_value +	
+					              		"\" id=\""
+					              		+ cont_value + cont_name +	
+					              		"\">").trigger("create");
+									
+								})
+			              		
+		       			    } 
+		       			    else if (cont.type == "judge"){
+			              		var cont_name= cont.num;
+				              	$("#clean").append("<label for=\"A\">对</label><input type=\"radio\" name=\""
+				              		+ cont_name +	
+				              		"\" id=\"A\" value=\"T\"><label for=\"B\">错</label><input type=\"radio\" name=\""
+				              		+ cont_name +	
+				              		"\" id=\"B\" value=\"F\">").trigger("create");
+				              	
+							}
+							else if (cont.type == "short"){
+			              		var cont_name= cont.num;
+				              	$("#clean").append("<textarea name=\""
+				              		+ cont_name +	
+				              		"\" id=\"fname\"></textarea>").trigger("create");
+				              	
+							}
+							else {
+			                    var tip = "服务器信息错误请重试";
+			                    	$("#errorexam").text(tip);
+			                    	$("#errorexam").show();
+		                	}
+		                	$("#clean").append("</fieldset></div>")
+		                	})
+		                }
+		                else if (cont.status == "server_error"){
+		                	var tip = "获取服务器信息失败请重试";
+			                    $("#errorexam").text(tip);
+			                    $("#errorexam").show();
+		                }
+			            
+			            else if (cont.status == "local_error"){
+		                	var tip = "本地信息错误请重试";
+			                    $("#errorexam").text(tip);
+			                    $("#errorexam").show();
+			            }
+			            
+			           	else {
+			           		var tip = "未知错误请重试";
+			                    $("#errorexam").text(tip);
+			                    $("#errorexam").show();
+			                }
+					
+			})
+			
+	    })
+		
+		//提交试题
+		$("#update").on("click", "a", function() {
+			
+			var vals = $("#questionscontent").serialize();
+	            $.post(address + "/answer/phone/handin/", vals, function(data) {
+	                if (data.status == "ok"){ 
+                    		window.location.href='#examlist';
+                    		alert("提交成功")
+                    	}
+                    	else if (data.status == "server_error"){
+		                	var tip = "获取服务器信息失败请重试";
+			                    $("#errorexam").text(tip);
+			                    $("#errorexam").show();
+		                }
+			            
+			            else if (data.status == "local_error"){
+		                	var tip = "本地信息错误请重试";
+			                    $("#errorexam").text(tip);
+			                    $("#errorexam").show();
+			            }
+			            
+			           	else {
+			           		var tip = "未知错误请重试";
+			                    $("#errorexam").text(tip);
+			                    $("#errorexam").show();
+			                } 
+	                })
+            	})
+		//获取科目
+		var list = function() {
+            $.get( address + "/paper/phone/subject/", {}, function(data) {
+               	local.content_ = data;
+              	var content_ = data;
+              	if (content_.status == "ok"){
+	              	$(content_.info).each(function(index){
+	              		var cont = content_.info[index].name;
+	              		var subject_pk= content_.info[index].pk;
+			              	$("#subjectcon").append("<li value=\""
+			              			+ subject_pk +
+			              		"\"><a href=\"#examlist\" data-transition=\"slide\">"
+									+ cont +
+								"</a></li>")
+			              	.listview('refresh').trigger("create");  //重载css			            
+	            	})
+	            }
+            	else if (cont.status == "server_error"){
+		            	var tip = "服务器错误请重试";
+		            	$("#errorlist").text(tip);
+		            	$("#errorlist").show();
+		            }
+		            else if (cont.status == "local_error"){
+		            	var tip = "本地错误请重试";
+		            	$("#errorlist").text(tip);
+		            	$("#errorlist").show();
+		            }
+		            else {
+		            	var tip = "未知错误请重试";
+		            	$("#errorlist").text(tip);
+		            	$("#errorlist").show();
+		            }
+        	})
+        };
+	    //添加回退按钮事件
+			document.addEventListener("backbutton",onBackKeyDown,false); 
+		//BackButton按钮
+		function onBackKeyDown(){
+			if($.mobile.activePage.is('#home')){
+			    navigator.app.exitApp();
+			}
+			else {
+			    navigator.app.backHistory();
+			}
+		}
+		//清空缓存
+		$("#back1").on("click", "li", function() {
+			$("#examcon").empty()
+		})
+		$("#back2").on("click", "li", function() {
+			$("#clean").empty()
+		})
+		//自动list get
+		list();
+	})
+	</script>
+
+</head>
+<body>
+	<div data-role="page" id="subject" data-theme="a">
+		<div data-role="header" >
+			<div style="height: 20px;"></div>
+			<h1>科目列表</h1>
+		</div>
+		<div data-role="content" id="subjectcontent" >
+			<span style="color: red; display: none" id="errorlist"></span>
+			<ul data-role="listview"  data-filter="true" id="subjectcon">
+				
+		</ul>
+
+	</div>
+	<div data-role="footer" data-position="fixed">
+		<div data-role="navbar">
+			<ul>
+				<li>
+					<a href="#" data-icon="grid" class="ui-btn-active">科目</a>
+				</li>
+				<li>
+					<a href="main3.html" data-icon="gear"   rel="external">设置</a>
+				</li>
+				<li>
+					<a href="main4.html" data-icon="search"  rel="external"  >帮助</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+<div data-role="page" id="examlist">
+	<div data-role="header">
+		<div style="height: 20px;"></div>
+		<h1>试题列表</h1>
+	</div>
+	<div data-role="content" id="examlistcontent" >
+		<span style="color: red; display: none" id="errorsubject"></span>
+		<ul data-role="listview"  data-filter="true" id="examcon">
+
+			
+
+		</ul>
+	</div>
+	<div data-role="footer" data-position="fixed">
+		<div data-role="navbar">
+			<ul id="back1">
+				<li>
+					<a href="#subject" data-role="button" data-icon="refresh" data-transition="slide">返回</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+	<div data-role="page" id="questions">
+		<div data-role="header">
+		<div style="height: 20px;"></div>
+		<h1>试题</h1>
+		</div>
+		<span style="color: red; display: none" id="errorexam"></span>
+		<div data-role="content">
+			<form method="post" id="questionscontent" name = "form" >
+			<div id="clean">
+				
+			</div>
+			</form>
+		</div>
+	<div data-role="footer" data-position="fixed">
+		<div data-role="navbar">
+			<ul id="back2">
+				<li>
+					<a href="#examlist" data-role="button" data-icon="refresh" data-transition="slide" >返回</a>
+				</li>
+				<li id="update">
+					<a href="" data-role="button" data-icon="check" data-transition="slide">提交</a>
+
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+
+</body>
+</html>
