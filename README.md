@@ -2,7 +2,7 @@
 
 师生互动系统APP
 
-PhoneGap : 5.0
+PhoneGap : 5.3
 
 jQuery Mobile : 1.4.2
 
